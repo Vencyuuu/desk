@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/DeskNest/Models/AppState.cs" Link="Models/AppState.cs" />
+    <Compile Include="../../src/DeskNest/Services/StorageService.cs" Link="Services/StorageService.cs" />
+    <Compile Include="../../src/DeskNest/Interop/ShellService.cs" Link="Interop/ShellService.cs" />
+    <Compile Include="../../src/DeskNest/Services/DesktopCommandChannel.cs" Link="Services/DesktopCommandChannel.cs" />
+    <Compile Include="../../src/DeskNest/Services/FileNameSearch.cs" Link="Services/FileNameSearch.cs" />
+  </ItemGroup>
+</Project>

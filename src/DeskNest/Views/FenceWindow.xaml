@@ -1,0 +1,53 @@
+<Window x:Class="DeskNest.Views.FenceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DeskNest.Views"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize" MinWidth="260" MinHeight="50">
+    <Border x:Name="Frame" Background="Transparent" CornerRadius="12"
+            BorderThickness="1" BorderBrush="{DynamicResource LineBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <local:GlassSurface x:Name="Glass" Grid.RowSpan="2" IsHitTestVisible="False" />
+            <Border Background="Transparent" MouseLeftButtonDown="OnHeaderDrag" CornerRadius="12,12,0,0">
+                <Grid Margin="14,0,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="AccentMark" Width="4" Height="16" CornerRadius="2" Margin="0,0,10,0" />
+                    <Grid x:Name="TitleArea" Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="PartitionTitle" Background="Transparent" Padding="4,5"
+                                   FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Cursor="IBeam"
+                                   ToolTip="点击修改名称；拖动移动卡片" />
+                        <TextBox x:Name="TitleEditor" Visibility="Collapsed" Height="28" Padding="4,4"
+                                 MaxLength="40" AutomationProperties.Name="收纳卡片名称"
+                                 PreviewKeyDown="OnTitleKeyDown" LostKeyboardFocus="OnTitleLostFocus" />
+                    </Grid>
+                    <TextBlock x:Name="Count" Grid.Column="2" VerticalAlignment="Center" Margin="8,0"
+                               FontSize="11" Foreground="{DynamicResource SecondaryBrush}" ToolTip="分区内项目总数" />
+                    <Button Grid.Column="3" Style="{StaticResource IconButton}" Content="&#xE70D;"
+                            ToolTip="折叠 / 展开，更多配置在系统托盘" Click="OnToggle" />
+                </Grid>
+            </Border>
+            <local:FileBoard x:Name="Board" Grid.Row="1" Margin="8,0,8,8" />
+            <Thumb x:Name="ResizeHandle" Grid.Row="1" Width="16" Height="16"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"
+                   DragDelta="OnResize">
+                <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                        <Grid Background="Transparent">
+                            <Path Data="M 4,12 L 12,4 M 8,12 L 12,8" StrokeThickness="1"
+                                  Stroke="{DynamicResource SecondaryBrush}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Thumb.Template>
+            </Thumb>
+        </Grid>
+    </Border>
+</Window>

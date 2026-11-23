@@ -1,0 +1,4 @@
+LIBRARY "DeskNest.Shell.dll"
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow PRIVATE
