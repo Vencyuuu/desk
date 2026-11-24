@@ -21,9 +21,7 @@
             <Setter Property="Background" Value="{DynamicResource ContentBrush}" />
             <Setter Property="UseLayoutRounding" Value="True" />
         </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource LabelBrush}" />
-        </Style>
+        <!-- 文字沿用所在控件的前景色，避免全局文字样式覆盖蓝色主按钮的白色文字。 -->
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource LabelBrush}" />
             <Setter Property="Background" Value="{DynamicResource FillBrush}" />
@@ -77,7 +75,8 @@
                         <Border Background="{TemplateBinding Background}" CornerRadius="6"
                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="0" x:Name="Frame">
                             <Grid>
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
+                                <!-- TextBoxView 自身会使用 Padding，宿主不能再用相同的 Margin 重复扣减。 -->
+                                <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" />
                                 <TextBlock x:Name="Hint" Text="{TemplateBinding Tag}"
                                            Foreground="{DynamicResource SecondaryBrush}"
                                            Margin="{TemplateBinding Padding}" IsHitTestVisible="False"
@@ -116,6 +115,8 @@
                                 </ToggleButton.Template>
                             </ToggleButton>
                             <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" IsHitTestVisible="False"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
                                               Margin="8,3,22,3" VerticalAlignment="Center" />
                             <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9"
                                        HorizontalAlignment="Right" VerticalAlignment="Center"

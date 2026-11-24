@@ -17,6 +17,8 @@ public sealed class GlassSurface : FrameworkElement
     private static BitmapSource? wallpaper;
     private static string? wallpaperPath;
     public bool GlassEnabled { get; set; } = true;
+    public double MaterialOpacity { get; set; } = 0.65;
+    public Color? TintColor { get; set; }
 
     public static void RefreshWallpaper()
     {
@@ -65,7 +67,9 @@ public sealed class GlassSurface : FrameworkElement
         if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0) return;
         var dark = ((SolidColorBrush)FindResource("LabelBrush")).Color.R > 128;
         drawing.PushClip(new RectangleGeometry(bounds, 12, 12));
-        drawing.DrawRectangle((Brush)FindResource("ContentBrush"), null, bounds);
+        var tint = TintColor ?? ((SolidColorBrush)FindResource("ContentBrush")).Color;
+        tint.A = (byte)Math.Round(Math.Clamp(MaterialOpacity, 0.2, 1) * 255);
+        var material = new SolidColorBrush(tint);
         if (GlassEnabled && wallpaper != null)
         {
             var window = Window.GetWindow(this);
@@ -84,14 +88,14 @@ public sealed class GlassSurface : FrameworkElement
             var x = (monitor.Left + (monitor.Width - width) / 2 - native.Left) / dpi.DpiScaleX;
             var y = (monitor.Top + (monitor.Height - height) / 2 - native.Top) / dpi.DpiScaleY;
             drawing.DrawImage(wallpaper, new Rect(x, y, width / dpi.DpiScaleX, height / dpi.DpiScaleY));
-            drawing.DrawRectangle(new SolidColorBrush(dark
-                ? Color.FromArgb(174, 30, 32, 38) : Color.FromArgb(165, 248, 250, 255)), null, bounds);
+            drawing.DrawRectangle(material, null, bounds);
             // 透明着色、边缘亮线和柔和的方向高光共同近似液态玻璃，而非声称苹果原生材质。
             var sheen = new LinearGradientBrush(
                 Color.FromArgb(dark ? (byte)28 : (byte)115, 255, 255, 255),
                 Color.FromArgb(0, 255, 255, 255), 70);
             drawing.DrawRectangle(sheen, null, bounds);
         }
+        else drawing.DrawRectangle(material, null, bounds);
         var outline = new Pen(new SolidColorBrush(Color.FromArgb(100, 255, 255, 255)), 1);
         drawing.DrawRoundedRectangle(null, outline,
             new Rect(0.5, 0.5, Math.Max(0, ActualWidth - 1), Math.Max(0, ActualHeight - 1)), 12, 12);

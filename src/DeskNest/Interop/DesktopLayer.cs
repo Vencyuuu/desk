@@ -40,6 +40,8 @@ public static class DesktopLayer
             SetWindowLongPtr(handle, -16, new IntPtr(style));
             return false;
         }
+        // 仅修改窗口样式 / 父级时刷新非客户区，普通拖动不重复发送框架变化消息。
+        SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0, 0x01 | 0x02 | 0x04 | 0x10 | 0x20);
         Place(window, original.Left, original.Top, original.Width, original.Height);
         return GetParent(handle) == desktop;
     }
@@ -68,11 +70,14 @@ public static class DesktopLayer
     {
         var handle = new WindowInteropHelper(window).Handle;
         if (handle == IntPtr.Zero) return;
+        GetWindowRect(handle, out var current);
+        if (current.Left == x && current.Top == y && current.Width == width && current.Height == height) return;
         var point = new NativePoint { X = x, Y = y };
         var parent = GetParent(handle);
         if (parent != IntPtr.Zero) ScreenToClient(parent, ref point);
         // 原生移动绕过子窗口不支持的 Window.DragMove，位置使用物理屏幕坐标。
-        if (!SetWindowPos(handle, IntPtr.Zero, point.X, point.Y, width, height, 0x10 | 0x20))
+        // 不抢占同级窗口层级，不触发 SWP_FRAMECHANGED，减少透明子窗口闪烁及无关布局反馈。
+        if (!SetWindowPos(handle, IntPtr.Zero, point.X, point.Y, width, height, 0x10 | 0x04))
             throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 

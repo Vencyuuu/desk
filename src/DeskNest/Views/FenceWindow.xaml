@@ -2,13 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:DeskNest.Views"
+        Style="{StaticResource {x:Type Window}}"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize" MinWidth="260" MinHeight="50">
     <Border x:Name="Frame" Background="Transparent" CornerRadius="12"
             BorderThickness="1" BorderBrush="{DynamicResource LineBrush}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="48" />
+                <RowDefinition x:Name="HeaderRow" Height="48" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <local:GlassSurface x:Name="Glass" Grid.RowSpan="2" IsHitTestVisible="False" />
@@ -25,7 +26,7 @@
                         <TextBlock x:Name="PartitionTitle" Background="Transparent" Padding="4,5"
                                    FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Cursor="IBeam"
                                    ToolTip="点击修改名称；拖动移动卡片" />
-                        <TextBox x:Name="TitleEditor" Visibility="Collapsed" Height="28" Padding="4,4"
+                        <TextBox x:Name="TitleEditor" Visibility="Collapsed" MinHeight="32" Padding="4,5"
                                  MaxLength="40" AutomationProperties.Name="收纳卡片名称"
                                  PreviewKeyDown="OnTitleKeyDown" LostKeyboardFocus="OnTitleLostFocus" />
                     </Grid>

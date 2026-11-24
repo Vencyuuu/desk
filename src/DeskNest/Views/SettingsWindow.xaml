@@ -1,0 +1,138 @@
+<Window x:Class="DeskNest.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource {x:Type Window}}"
+        Title="DeskNest 设置" Width="520" Height="680" MinWidth="460" MinHeight="540"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize" ShowInTaskbar="True">
+    <Window.Resources>
+        <Style x:Key="FontPreviewItem" TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+            <Setter Property="FontFamily" Value="{Binding PreviewFont}" />
+        </Style>
+        <Style x:Key="FontSelector" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FontPreviewItem}" />
+            <Setter Property="FontFamily" Value="{Binding SelectedItem.PreviewFont, RelativeSource={RelativeSource Self}}" />
+        </Style>
+    </Window.Resources>
+    <Grid Background="{DynamicResource ContentBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Margin="24,24,24,20">
+            <TextBlock Text="设置" FontSize="24" FontWeight="SemiBold" />
+            <TextBlock Text="让桌面更符合你的使用习惯。" Margin="0,8,0,0"
+                       Foreground="{DynamicResource SecondaryBrush}" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="24,0,24,0">
+            <StackPanel Margin="0,0,14,0">
+                <StackPanel x:Name="PreferencePanel">
+                <TextBlock Text="通用" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,14" />
+                <CheckBox x:Name="StartupCheck" Content="开机自启动" Foreground="{DynamicResource LabelBrush}"
+                          Checked="OnStartupChanged" Unchecked="OnStartupChanged" />
+                <TextBlock Text="当前用户登录 Windows 后自动运行；可随时关闭。" FontSize="11"
+                           Foreground="{DynamicResource SecondaryBrush}" Margin="20,6,0,22" TextWrapping="Wrap" />
+                <DockPanel Margin="0,0,0,24">
+                    <TextBlock Text="主题" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ThemeChoice" Width="150" HorizontalAlignment="Right"
+                              AutomationProperties.Name="主题" SelectionChanged="OnPreferenceChanged">
+                        <ComboBoxItem Content="跟随系统" Tag="system" />
+                        <ComboBoxItem Content="浅色" Tag="light" />
+                        <ComboBoxItem Content="深色" Tag="dark" />
+                    </ComboBox>
+                </DockPanel>
+                <Border Height="1" Background="{DynamicResource LineBrush}" Margin="0,0,0,20" />
+                <TextBlock Text="底部 Dock" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,14" />
+                <CheckBox x:Name="DockCheck" Content="显示快捷应用栏" Foreground="{DynamicResource LabelBrush}"
+                          Checked="OnPreferenceChanged" Unchecked="OnPreferenceChanged" />
+                <DockPanel Margin="0,16,0,8">
+                    <TextBlock Text="高度" />
+                    <TextBlock x:Name="HeightValue" HorizontalAlignment="Right"
+                               Foreground="{DynamicResource SecondaryBrush}" />
+                </DockPanel>
+                <Slider x:Name="HeightSlider" Minimum="64" Maximum="128" TickFrequency="2"
+                        IsSnapToTickEnabled="True" AutomationProperties.Name="Dock 高度"
+                        ValueChanged="OnPreferenceChanged" />
+                <TextBlock Text="图标大小与上下留白会同步调整。" FontSize="11"
+                           Foreground="{DynamicResource SecondaryBrush}" Margin="0,6,0,22" />
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="距底部距离" />
+                    <TextBlock x:Name="BottomOffsetValue" HorizontalAlignment="Right"
+                               Foreground="{DynamicResource SecondaryBrush}" />
+                </DockPanel>
+                <Slider x:Name="BottomOffsetSlider" Minimum="0" Maximum="300" TickFrequency="1"
+                        IsSnapToTickEnabled="True" AutomationProperties.Name="Dock 距底部距离"
+                        ValueChanged="OnPreferenceChanged" />
+                <TextBlock Text="距可用桌面底边的间距，位于任务栏上方；单位为逻辑像素。" FontSize="11"
+                           TextWrapping="Wrap" Foreground="{DynamicResource SecondaryBrush}" Margin="0,6,0,22" />
+                <Border Height="1" Background="{DynamicResource LineBrush}" Margin="0,0,0,20" />
+                <TextBlock Text="卡片与材质" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12" />
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="卡片背景透明度" />
+                    <TextBlock x:Name="TransparencyValue" HorizontalAlignment="Right"
+                               Foreground="{DynamicResource SecondaryBrush}" />
+                </DockPanel>
+                <Slider x:Name="TransparencySlider" Minimum="0" Maximum="80" TickFrequency="1"
+                        IsSnapToTickEnabled="True" AutomationProperties.Name="卡片背景透明度"
+                        ValueChanged="OnPreferenceChanged" />
+                <TextBlock Text="数值越高，背景越通透；文字和文件图标保持清晰。" FontSize="11"
+                           Foreground="{DynamicResource SecondaryBrush}" Margin="0,6,0,16" TextWrapping="Wrap" />
+                <CheckBox x:Name="GlassCheck" Content="启用液态玻璃近似效果"
+                          Foreground="{DynamicResource LabelBrush}" Checked="OnPreferenceChanged"
+                          Unchecked="OnPreferenceChanged" Margin="0,0,0,20" />
+                <Border Height="1" Background="{DynamicResource LineBrush}" Margin="0,0,0,20" />
+                <TextBlock x:Name="TypographyHeading" Text="字体与卡片标题" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,14" />
+                <TextBlock Text="总字体（同步卡片、Dock、设置页）" Margin="0,0,0,6" />
+                <ComboBox x:Name="GlobalFontChoice" Style="{StaticResource FontSelector}"
+                          DisplayMemberPath="Name" SelectedValuePath="Family" TextSearch.TextPath="Name"
+                          SelectionChanged="OnGlobalFontChanged" Margin="0,0,0,12" />
+                <TextBlock Text="卡片字体（标题、文件名与搜索）" Margin="0,0,0,6" />
+                <ComboBox x:Name="CardFontChoice" Style="{StaticResource FontSelector}" DisplayMemberPath="Name" SelectedValuePath="Family"
+                          TextSearch.TextPath="Name" SelectionChanged="OnPreferenceChanged" Margin="0,0,0,12" />
+                <TextBlock Text="Dock 字体（名称提示与拖动提示）" Margin="0,0,0,6" />
+                <ComboBox x:Name="DockFontChoice" Style="{StaticResource FontSelector}" DisplayMemberPath="Name" SelectedValuePath="Family"
+                          TextSearch.TextPath="Name" SelectionChanged="OnPreferenceChanged" Margin="0,0,0,12" />
+                <TextBlock Text="设置页字体" Margin="0,0,0,6" />
+                <ComboBox x:Name="SettingsFontChoice" Style="{StaticResource FontSelector}" DisplayMemberPath="Name" SelectedValuePath="Family"
+                          TextSearch.TextPath="Name" SelectionChanged="OnPreferenceChanged" Margin="0,0,0,12" />
+                <TextBlock Text="从本机已安装字体中选择；缺失字体自动回退。图标不随字体改变。"
+                           TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource SecondaryBrush}" Margin="0,0,0,16" />
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="卡片标题字号" />
+                    <TextBlock x:Name="TitleSizeValue" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Slider x:Name="TitleSizeSlider" Minimum="10" Maximum="32" TickFrequency="1"
+                        IsSnapToTickEnabled="True" ValueChanged="OnPreferenceChanged" Margin="0,0,0,14" />
+                <WrapPanel Margin="0,0,0,10">
+                    <Button Content="标题颜色…" Click="OnPickTitleColor" Margin="0,0,8,0" />
+                    <Button Content="跟随主题" Click="OnResetTitleColor" />
+                </WrapPanel>
+                <TextBlock x:Name="TitleColorValue" Margin="0,0,0,20" />
+                </StackPanel>
+                <Border Height="1" Background="{DynamicResource LineBrush}" Margin="0,0,0,20" />
+                <TextBlock Text="数据目录" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12" />
+                <TextBox x:Name="DataDirectoryText" IsReadOnly="True" TextWrapping="Wrap"
+                         MinHeight="52" Padding="8" Margin="0,0,0,10" />
+                <WrapPanel x:Name="DirectoryButtons">
+                    <Button Content="迁移到新目录…" Click="OnMigrateDirectory" Margin="0,0,8,8" />
+                    <Button Content="关联已有目录…" Click="OnAssociateDirectory" Margin="0,0,0,8" />
+                </WrapPanel>
+                <TextBlock Text="迁移会复制并校验文件，原目录保留为备份。手动移动过数据时，请关联包含 layout.json 和 Files 的完整目录。"
+                           TextWrapping="Wrap" Foreground="{DynamicResource SecondaryBrush}" FontSize="11"
+                           Margin="0,0,0,12" />
+                <TextBlock x:Name="DirectoryStatus" TextWrapping="Wrap" Margin="0,0,0,8" />
+                <ProgressBar x:Name="DirectoryProgress" Height="4" Visibility="Collapsed" Margin="0,0,0,8" />
+                <Button x:Name="CancelMigration" Content="取消复制" Click="OnCancelMigration"
+                        HorizontalAlignment="Left" Visibility="Collapsed" Margin="0,0,0,20" />
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="2" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="24,16">
+            <DockPanel>
+                <Button Content="完成" DockPanel.Dock="Right" Click="OnDone" Style="{StaticResource PrimaryButton}" />
+                <TextBlock x:Name="SaveStatus" Text="更改即时生效并自动保存" VerticalAlignment="Center"
+                           FontSize="11" Foreground="{DynamicResource SecondaryBrush}" TextWrapping="Wrap"
+                           Margin="0,0,12,0" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

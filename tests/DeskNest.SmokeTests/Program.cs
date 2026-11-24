@@ -129,4 +129,105 @@ Check(FileNameSearch.Matches("ProjectReport.PDF", "pjt pdf"), "多关键词及�
 Check(FileNameSearch.Matches("报告２０２６.pdf", "2026"), "全角与半角文件名统一匹配");
 Check(FileNameSearch.Matches("工作报告.pdf", "   "), "空白搜索恢复全部文件");
 Check(!FileNameSearch.Matches("工作报告.pdf", "报工"), "不匹配顺序错误的字符");
+state.DockHeight = 128;
+state.CardOpacity = 0.2;
+storage.Save(state);
+Check(storage.Load().DockHeight == 128 && storage.Load().CardOpacity == 0.2, "外观配置边界值持久化");
+var oldConfig = Path.Combine(run, "old-config");
+Directory.CreateDirectory(oldConfig);
+File.WriteAllText(Path.Combine(oldConfig, "layout.json"), "{\"Version\":1,\"Partitions\":[]}");
+var migrated = new StorageService(oldConfig).Load();
+Check(migrated.DockHeight == 88 && migrated.CardOpacity == 0.65, "旧配置缺少新字段时自动使用兼容默认值");
+Check(migrated.DockBottomOffset == 12, "旧配置默认保留 Dock 底部间距");
+Check(migrated.Typography == new TypographyPreferences(), "旧配置兼容默认字体及标题样式");
+Check(!new TypographyPreferences(CardTitleSize: 0).IsValid() &&
+    !new TypographyPreferences(CardTitleColor: "invalid").IsValid(), "拒绝无效标题字号及颜色");
+Check(!AppearancePreferences.IsValid("light", 88, 0.65, -1) &&
+    !AppearancePreferences.IsValid("light", 88, 0.65, 301) &&
+    !AppearancePreferences.IsValid("light", 88, 0.65, double.NaN), "拒绝无效 Dock 底部间距");
+var testKey = @"Software\DeskNest\Tests\" + Guid.NewGuid().ToString("N");
+try
+{
+    using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(testKey)) key.SetValue("OtherApp", "keep");
+    var startup = new StartupService(@"D:\Program Files\DeskNest\DeskNest.exe", @"D:\Desk Nest\Data", testKey);
+    Check(!startup.IsEnabled, "自启动默认不创建启动项");
+    startup.SetEnabled(true);
+    using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(testKey))
+        Check(startup.IsEnabled && (string?)key?.GetValue("DeskNest") ==
+            "\"D:\\Program Files\\DeskNest\\DeskNest.exe\" --data-dir \"D:\\Desk Nest\\Data\"",
+            "自启动注册正确引用含空格的程序及数据目录");
+    startup.SetEnabled(false);
+    startup.SetEnabled(false);
+    using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(testKey))
+        Check(!startup.IsEnabled && (string?)key?.GetValue("OtherApp") == "keep", "关闭自启动仅移除自己的值且可重复执行");
+}
+finally { Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(testKey, false); }
+// 使用独立夹具验证迁移；失败和取消都不能更改源文件或定位入口。
+var moveSource = new StorageService(Path.Combine(run, "move-source"));
+var moveCard = new Partition { Name = "迁移验证" };
+var moveState = new AppState { Partitions = { moveCard } };
+var moveFile = Path.Combine(moveSource.GetFolder(moveCard), "中文文件.txt");
+File.WriteAllText(moveFile, "迁移前后内容一致");
+Directory.CreateDirectory(Path.Combine(moveSource.GetFolder(moveCard), "空目录"));
+moveState.DockItems.Add(new DockItem { Name = "内部文件", Path = moveFile });
+moveSource.Save(moveState);
+var moveTarget = Path.Combine(run, "move-target");
+var locator = new DataDirectoryLocation(moveSource.Root);
+using (var sourceLease = DataDirectoryLease.Acquire(moveSource.Root))
+{
+    var duplicateRejected = false;
+    try { using var duplicate = DataDirectoryLease.Acquire(moveSource.Root); }
+    catch (IOException) { duplicateRejected = true; }
+    Check(duplicateRejected, "同一数据目录拒绝第二个写入实例");
+    using var prepared = await DataMigrationService.CopyAsync(moveSource, moveTarget);
+    var copied = DataPaths.ValidateExisting(prepared.Store);
+    Check(File.ReadAllText(Path.Combine(prepared.Store.GetFolder(moveCard), "中文文件.txt")) ==
+        File.ReadAllText(moveFile) && Directory.Exists(Path.Combine(prepared.Store.GetFolder(moveCard), "空目录")),
+        "迁移保留中文文件内容及空子目录");
+    Check(copied.DockItems[0].Path == Path.Combine(prepared.Store.GetFolder(moveCard), "中文文件.txt"),
+        "加载迁移数据自动修复内部 Dock 引用");
+    Check(File.Exists(moveFile) && !File.Exists(Path.Combine(moveTarget, "location.json")),
+        "迁移保留源目录且不复制旧入口定位信息");
+    locator.SetRoot(moveTarget);
+    Check(new DataDirectoryLocation(moveSource.Root).ResolveRoot() == moveTarget,
+        "稳定入口重启后定位新数据目录");
+}
+foreach (var destination in new[] { moveSource.Root, Path.Combine(moveSource.Root, "nested"), moveTarget })
+{
+    var moveRejected = false;
+    try { using var invalidMove = await DataMigrationService.CopyAsync(moveSource, destination); }
+    catch (IOException) { moveRejected = true; }
+    Check(moveRejected && File.Exists(moveFile), "拒绝相同、嵌套或非空目标且保留源文件");
+}
+var lockedTarget = Path.Combine(run, "locked-target");
+using (var writer = new FileStream(moveFile, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+{
+    var moveRejected = false;
+    try { using var invalidMove = await DataMigrationService.CopyAsync(moveSource, lockedTarget); }
+    catch (IOException) { moveRejected = true; }
+    Check(moveRejected && !Directory.Exists(lockedTarget), "正在写入的托管文件阻止迁移且不发布目标目录");
+}
+var canceledTarget = Path.Combine(run, "canceled-target");
+using (var cancellation = new CancellationTokenSource())
+{
+    var canceled = false;
+    var progress = new ImmediateProgress(value =>
+    {
+        if (value.Stage == "复制并校验文件") cancellation.Cancel();
+    });
+    try { using var invalidMove = await DataMigrationService.CopyAsync(moveSource, canceledTarget, progress, cancellation.Token); }
+    catch (OperationCanceledException) { canceled = true; }
+    Check(canceled && !Directory.Exists(canceledTarget) && File.Exists(moveFile),
+        "复制中取消清理暂存文件并继续保留源数据");
+}
+var missingLocation = new DataDirectoryLocation(Path.Combine(run, "missing-profile"));
+missingLocation.SetRoot(Path.Combine(run, "not-present"));
+var missingRejected = false;
+try { missingLocation.ResolveRoot(); } catch (DirectoryNotFoundException) { missingRejected = true; }
+Check(missingRejected, "已配置目录丢失时拒绝静默创建空数据");
 Console.WriteLine($"\n{passed} checks passed. Test data: {run}");
+
+sealed class ImmediateProgress(Action<DataMoveProgress> report) : IProgress<DataMoveProgress>
+{
+    public void Report(DataMoveProgress value) => report(value);
+}

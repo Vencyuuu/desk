@@ -15,6 +15,7 @@ public sealed class PartitionDialog : Window
 
     public PartitionDialog(string initialName = "", string initialColor = "#007AFF")
     {
+        Style = (Style)FindResource(typeof(Window));
         Title = string.IsNullOrEmpty(initialName) ? "新建分区" : "编辑分区";
         Width = 380;
         SizeToContent = SizeToContent.Height;

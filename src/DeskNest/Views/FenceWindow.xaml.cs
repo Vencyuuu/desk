@@ -105,7 +105,29 @@ public partial class FenceWindow : Window
 
     private void ApplyAppearance()
     {
+        var text = controller.State.Typography;
+        var titleColor = partition.TitleColor ?? text.CardTitleColor;
+        FontFamily = FontCatalog.Resolve(text.CardFont);
+        PartitionTitle.FontSize = TitleEditor.FontSize = text.CardTitleSize;
+        if (titleColor == null)
+        {
+            PartitionTitle.SetResourceReference(TextBlock.ForegroundProperty, "LabelBrush");
+            TitleEditor.SetResourceReference(Control.ForegroundProperty, "LabelBrush");
+        }
+        else
+        {
+            var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(titleColor));
+            PartitionTitle.Foreground = TitleEditor.Foreground = brush;
+        }
+        // 大字号与不同字体的行高不同；标题编辑框与折叠高度同步增长，避免再次裁切文字。
+        var headerHeight = Math.Max(48, Math.Ceiling(FontFamily.LineSpacing * text.CardTitleSize + 22));
+        HeaderRow.Height = new GridLength(headerHeight);
+        TitleEditor.MinHeight = Math.Ceiling(FontFamily.LineSpacing * text.CardTitleSize + 12);
+        if (partition.Collapsed) DesktopLayer.Resize(this, Width, headerHeight + 2);
         Glass.GlassEnabled = controller.State.GlassEnabled;
+        Glass.TintColor = partition.BackgroundColor == null ? null :
+            (Color)ColorConverter.ConvertFromString(partition.BackgroundColor);
+        Glass.MaterialOpacity = controller.State.CardOpacity;
         Glass.InvalidateVisual();
     }
 
@@ -225,7 +247,7 @@ public partial class FenceWindow : Window
     {
         if (!partition.Collapsed) partition.Height = ActualHeight > 0 ? ActualHeight : Height;
         partition.Collapsed = !partition.Collapsed;
-        DesktopLayer.Resize(this, Width, partition.Collapsed ? 50 : Math.Max(180, partition.Height));
+        DesktopLayer.Resize(this, Width, partition.Collapsed ? HeaderRow.Height.Value + 2 : Math.Max(180, partition.Height));
         UpdateHeader();
         SaveGeometry();
         controller.Persist();
@@ -240,6 +262,7 @@ public partial class FenceWindow : Window
 
     public void SaveGeometry()
     {
+        if (controller.IsDataChanging) return;
         if (!placed || !DesktopLayer.IsAttached(this) || !controller.State.Partitions.Contains(partition)) return;
         var bounds = DesktopLayer.Bounds(this);
         var dpi = VisualTreeHelper.GetDpi(this);
@@ -248,6 +271,7 @@ public partial class FenceWindow : Window
         partition.Width = bounds.Width / dpi.DpiScaleX;
         if (!partition.Collapsed) partition.Height = bounds.Height / dpi.DpiScaleY;
         partition.PhysicalCoordinates = true;
-        controller.Persist();
+        // 几何保存不改变外观，避免广播触发其他折叠卡片及 Dock 的重绘 / 重新定位。
+        controller.Persist(notify: false);
     }
 }

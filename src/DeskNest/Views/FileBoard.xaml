@@ -7,7 +7,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid Margin="4,0,4,8">
-            <TextBox x:Name="SearchBox" Height="28" Padding="27,5,28,5" Tag="搜索文件名…"
+            <TextBox x:Name="SearchBox" MinHeight="32" Padding="27,5,28,5" Tag="搜索文件名…"
                      AutomationProperties.Name="搜索卡片内文件名" TextChanged="OnSearchChanged"
                      PreviewKeyDown="OnSearchKeyDown" />
             <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="9,0,0,0"
@@ -39,12 +39,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Width="76" Margin="2,7" ToolTip="{Binding Entry.Path}">
-                        <Grid Width="40" Height="40">
-                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="30"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryBrush}" />
-                            <Image Source="{Binding Icon}" Stretch="Uniform" />
-                        </Grid>
+                        <Image Source="{Binding Icon}" Width="40" Height="40" Stretch="Uniform" />
                         <TextBlock Text="{Binding Entry.Name}" TextAlignment="Center" FontSize="11"
                                    TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                                    MaxHeight="32" Margin="0,8,0,0" />

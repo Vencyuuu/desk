@@ -7,10 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/DeskNest/Services/DataPaths.cs" Link="Services/DataPaths.cs" />
+    <Compile Include="../../src/DeskNest/Services/DataDirectoryLocation.cs" Link="Services/DataDirectoryLocation.cs" />
+    <Compile Include="../../src/DeskNest/Services/DataDirectoryLease.cs" Link="Services/DataDirectoryLease.cs" />
+    <Compile Include="../../src/DeskNest/Services/DataMigrationService.cs" Link="Services/DataMigrationService.cs" />
     <Compile Include="../../src/DeskNest/Models/AppState.cs" Link="Models/AppState.cs" />
     <Compile Include="../../src/DeskNest/Services/StorageService.cs" Link="Services/StorageService.cs" />
     <Compile Include="../../src/DeskNest/Interop/ShellService.cs" Link="Interop/ShellService.cs" />
     <Compile Include="../../src/DeskNest/Services/DesktopCommandChannel.cs" Link="Services/DesktopCommandChannel.cs" />
     <Compile Include="../../src/DeskNest/Services/FileNameSearch.cs" Link="Services/FileNameSearch.cs" />
+    <Compile Include="../../src/DeskNest/Services/StartupService.cs" Link="Services/StartupService.cs" />
   </ItemGroup>
 </Project>

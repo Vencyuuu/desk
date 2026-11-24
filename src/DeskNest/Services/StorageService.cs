@@ -16,6 +16,7 @@ public sealed class StorageService
     public string FilesRoot => Path.Combine(Root, "Files");
     public string StatePath => Path.Combine(Root, "layout.json");
     public string? RecoveryMessage { get; private set; }
+    public string DesktopDirectory => desktopDirectory;
 
     public StorageService(string? root = null, string? desktop = null)
     {
@@ -55,13 +56,16 @@ public sealed class StorageService
         if (state.Version != 1 || state.Partitions == null || state.DockItems == null ||
             state.DockItems.Any(item => item == null || string.IsNullOrWhiteSpace(item.Path) ||
                 string.IsNullOrWhiteSpace(item.Name) || !Guid.TryParseExact(item.Id, "N", out _)) ||
-            state.Theme is not ("system" or "light" or "dark") ||
+            !AppearancePreferences.IsValid(state.Theme, state.DockHeight, state.CardOpacity, state.DockBottomOffset) ||
+            state.Typography == null || !state.Typography.IsValid() ||
             state.Partitions.Any(p => p == null || !Guid.TryParseExact(p.Id, "N", out _) ||
+                !TypographyPreferences.ValidColor(p.BackgroundColor) || !TypographyPreferences.ValidColor(p.TitleColor) ||
                 string.IsNullOrWhiteSpace(p.Name) || p.Accent == null ||
                 !Regex.IsMatch(p.Accent, "^#[0-9a-fA-F]{6}$") || !double.IsFinite(p.Left) ||
                 !double.IsFinite(p.Top) || !double.IsFinite(p.Width) || !double.IsFinite(p.Height)) ||
             state.Partitions.Select(p => p.Id).Distinct().Count() != state.Partitions.Count)
             throw new InvalidDataException("布局格式无效或版本不受支持。");
+        DataPaths.RebaseDock(state, state.DataRootHint, Root);
         return state;
     }
 
@@ -69,6 +73,7 @@ public sealed class StorageService
     {
         // 同卷临时文件 + 原子替换，避免掉电或中途退出写坏布局，并保留上一版备份。
         var temporary = StatePath + ".tmp";
+        state.DataRootHint = Root;
         File.WriteAllText(temporary, JsonSerializer.Serialize(state, json));
         if (File.Exists(StatePath))
             File.Replace(temporary, StatePath, StatePath + ".bak");
